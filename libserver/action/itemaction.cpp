@@ -292,11 +292,16 @@ Message ItemAction::importData(Message *msg)
 {
     LibG::Message message(msg);
     const QString &d = msg->data("data").toString();
+    const bool remove = msg->data("remove").toBool();
     const QVector<QStringRef> &vec = d.splitRef("\n", QString::SkipEmptyParts);
     int state = 0; //0: category, 1: item, 2: link
-    bool headerOk = false;
     int version = 0;
     if(mDb->isSupportTransaction()) mDb->beginTransaction();
+    if(remove) {
+        mDb->truncateTable("categories");
+        mDb->truncateTable("suppliers");
+        mDb->truncateTable("items");
+    }
     for(int i = 0; i < vec.size(); i++) {
         if(i == 0) {
             if(vec[i].startsWith("VERSION")) {
@@ -307,17 +312,18 @@ Message ItemAction::importData(Message *msg)
         }
         if(vec[i].startsWith(QStringLiteral("###CATEGORY"))) {
             state = 0;
-            headerOk = false;
             i++;
             continue;
         } else if(vec[i].startsWith(QStringLiteral("###ITEM"))) {
-            headerOk = false;
             state = 1;
             i++;
             continue;
         } else if(vec[i].startsWith(QStringLiteral("###LINK"))) {
-            headerOk = false;
             state = 2;
+            i++;
+            continue;
+        } else if(vec[i].startsWith(QStringLiteral("###SUPPLIER"))) {
+            state = 3;
             i++;
             continue;
         }

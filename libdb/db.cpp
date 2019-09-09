@@ -442,6 +442,16 @@ bool Db::isSQLite()
     return DBTYPE.compare("SQLITE") == 0;
 }
 
+bool Db::truncateTable(const QString &table)
+{
+    if(isSQLite()) {
+        this->exec(QString("DELETE FROM %1").arg(table));
+        this->exec("VACUUM");
+    } else {
+        this->exec(QString("TRUNCATE TABLE %1").arg(table));
+    }
+}
+
 QSqlDatabase Db::getDatabase()
 {
     if(mDatabasePool.hasLocalData()) {

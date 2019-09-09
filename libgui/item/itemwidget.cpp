@@ -40,6 +40,7 @@
 #include "addpricedialog.h"
 #include "stockcarddialog.h"
 #include "tilewidget.h"
+#include "importitemdialog.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPushButton>
@@ -194,13 +195,18 @@ The stocks cards and item link will be removed. Are you sure to delete item?"));
 
 void ItemWidget::importClicked()
 {
-    const QString &fileName = QFileDialog::getOpenFileName(this, tr("Import items"), QDir::homePath(), "*.csv");
-    if(fileName.isEmpty()) return;
-    QFile file(fileName);
-    if(!file.open(QFile::ReadOnly)) return;
-    Message msg(MSG_TYPE::ITEM, MSG_COMMAND::IMPORT);
-    msg.addData("data", QString::fromUtf8(file.readAll()));
-    sendMessage(&msg);
+    ImportItemDialog dialog;
+    const int res = dialog.exec();
+    if(res == QDialog::Accepted) {
+        const QString &fileName = QFileDialog::getOpenFileName(this, tr("Import items"), QDir::homePath(), "*.csv");
+        if(fileName.isEmpty()) return;
+        QFile file(fileName);
+        if(!file.open(QFile::ReadOnly)) return;
+        Message msg(MSG_TYPE::ITEM, MSG_COMMAND::IMPORT);
+        msg.addData("remove", dialog.isChecked());
+        msg.addData("data", QString::fromUtf8(file.readAll()));
+        sendMessage(&msg);
+    }
 }
 
 void ItemWidget::exportClicked()
